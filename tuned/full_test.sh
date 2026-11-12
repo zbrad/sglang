@@ -94,7 +94,7 @@ gate_checks() {
         n=$((n + 1))
         gpu_tuned_verify_arch "${so}" "${GPU_TUNED_CUDA_ARCH}" || rc=1
         ptx="$(cuobjdump --list-ptx "${so}" 2>&1 || true)"
-        if [[ -n "$(printf '%s\n' "${ptx}" | grep -oE 'sm_[0-9]+[a-z]?' || true)" ]]; then echo "  FAIL: ${so#"${SITE_DIR}"/} embeds PTX"; rc=1; fi
+        if [[ -n "$(printf '%s\n' "${ptx}" | grep -E '^PTX file +[0-9]+:' || true)" ]]; then echo "  FAIL: ${so#"${SITE_DIR}"/} embeds PTX"; rc=1; fi
         gpu_tuned_verify_toolkit_libs "${so}" || rc=1
     done < <(find "${SITE_DIR}/sgl_kernel" -name '*.so')
     if [[ "${n}" -gt 0 ]]; then echo "  ok:   ${n} sgl_kernel shared objects checked (sm_${GPU_TUNED_CUDA_ARCH} only, no PTX)"

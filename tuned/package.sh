@@ -101,7 +101,7 @@ while IFS= read -r so; do
     gpu_tuned_verify_arch "${so}" "${GPU_TUNED_CUDA_ARCH}" || exit 1
     PTX_OUT="$(cuobjdump --list-ptx "${so}" 2>&1)" \
         || { echo "ERROR: cuobjdump --list-ptx failed on ${so#"${STAGE}"/}: ${PTX_OUT}" >&2; exit 1; }
-    [[ -z "$(printf '%s\n' "${PTX_OUT}" | grep -oE 'sm_[0-9]+[a-z]?' || true)" ]] \
+    [[ -z "$(printf '%s\n' "${PTX_OUT}" | grep -E '^PTX file +[0-9]+:' || true)" ]] \
         || { echo "ERROR: ${so#"${STAGE}"/} embeds PTX: the driver would JIT-compile it at run time." >&2; exit 1; }
     gpu_tuned_stamp_lib_json "${so}" sglang-kernel "${VERSION}" "" \
         "upstream.declared_version=${KERNEL_VERSION%%+*}" "fork.commit=${BUILD_COMMIT}" "fork.dirty:bool=false" \
