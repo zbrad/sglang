@@ -60,6 +60,18 @@ echo "Installing sglang's other dependencies (upstream python/pyproject.toml min
 # shellcheck disable=SC2086 # GPU_TUNED_DROP_DEPS is a word list
 python3 -I tuned/deps.py upstream python/pyproject.toml ${GPU_TUNED_DROP_DEPS} > "${GPU_TUNED_BUILD_ROOT}/upstream-deps.txt"
 pip install -r "${GPU_TUNED_BUILD_ROOT}/upstream-deps.txt"
+# Gate: a dropped dependency that the requirements file does not replace must not be installed, even transitively
+# (timm pulled a stock torchvision in once, and transformers imports torchvision whenever it is present).
+for dropped in ${GPU_TUNED_DROP_DEPS}; do
+    pat="^${dropped//[-_.]/[-_.]}( |@|=|<|>|\\[|$)"
+    grep -qiE "${pat}" "${GPU_TUNED_REQUIREMENTS}" && continue
+    [[ "${dropped}" != "sglang-kernel" ]] || continue   # replaced by the wheel this repo builds (wheel.sh)
+    if pip show "${dropped}" >/dev/null 2>&1; then
+        echo "ERROR: ${dropped} is installed although tuned/repo.env drops it; required by: $(pip show "${dropped}" | sed -n 's/^Required-by: //p'). Drop that package too, or recreate the venv (GPU_TUNED_CLEAN_VENV=1)." >&2
+        exit 1
+    fi
+done
+echo "OK: none of the dropped dependencies is installed (${GPU_TUNED_DROP_DEPS})"
 
 echo "Auditing already-installed tuned packages"
 # Non-fatal: surfaces a stock torch or flashinfer that replaced a tuned one before the build relies on it.

@@ -59,7 +59,7 @@ dependencies (`tuned/deps.py upstream`). `package.sh` rewrites the packaged whee
 (`tuned/deps.py rewrite`), adding `sglang-kernel @ <this release's URL>`. Dropped for gb10: `sgl-flash-mla` (no sm_12x
 kernels), `sgl-deep-gemm` (JIT-only), `sgl-deep-ep` (multi-GPU), `outlines` (optional grammar backend; its
 `outlines_core` has no cp314 wheel and its PyO3 0.22 refuses Python 3.14, so `--grammar-backend outlines` is not
-available; xgrammar and llguidance are), `torchvision`/`torchaudio` (no build for the tuned
+available; xgrammar and llguidance are), `timm` (vision models only; it pulls in torchvision), `torchvision`/`torchaudio` (no build for the tuned
 torch, so vision and audio models are out of scope).
 
 ## Where things are
