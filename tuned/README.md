@@ -22,7 +22,7 @@ CUDA_TAG=cu134 bash tuned/publish.sh gb10      # publish exactly what release.sh
 `CUDA_VER` is required: there is no default toolkit.
 
 Host prerequisites: the CUDA 13.4 toolkit at `/usr/local/cuda-13.4`, and Rust for dependencies with no cp314 wheel
-(`sudo apt-get install rustc-1.85 cargo-1.85`; `outlines_core==0.1.26` is built from source).
+(`sudo apt-get install rustc-1.97 cargo-1.97`; `outlines_core==0.1.26` is built from source).
 
 ## What is built
 

@@ -33,14 +33,15 @@ echo "Python:    $(python3 --version)"
 echo ""
 
 # Rust, for dependencies with no cp314 wheel that pip builds from source (outlines==0.1.11 pins outlines_core==0.1.26,
-# which publishes wheels up to cp312 only). The distro's versioned toolchain (apt rustc-1.85 cargo-1.85; user decision
-# 2026-11-12) installs under /usr/lib/rust-1.85/bin; the unversioned rustc 1.75 is too old to rely on.
-GPU_TUNED_RUST_BIN="${GPU_TUNED_RUST_BIN:-/usr/lib/rust-1.85/bin}"
+# which publishes wheels up to cp312 only). The distro's versioned toolchain (apt rustc-1.97 cargo-1.97; user decision
+# 2026-11-12 for a versioned apt toolchain) installs under /usr/lib/rust-1.97/bin. The unversioned rustc 1.75 is too old,
+# and so is 1.85: outlines_core's source build resolves current crates that need rustc 1.88 (icu_*) (build log, 2026-11-12).
+GPU_TUNED_RUST_BIN="${GPU_TUNED_RUST_BIN:-/usr/lib/rust-1.97/bin}"
 if [[ -x "${GPU_TUNED_RUST_BIN}/cargo" ]]; then
     export PATH="${GPU_TUNED_RUST_BIN}:${PATH}"
     echo "Rust: $(rustc --version) from ${GPU_TUNED_RUST_BIN}"
 else
-    echo "ERROR: no cargo in ${GPU_TUNED_RUST_BIN}. Install it: sudo apt-get install rustc-1.85 cargo-1.85 (or set GPU_TUNED_RUST_BIN)." >&2
+    echo "ERROR: no cargo in ${GPU_TUNED_RUST_BIN}. Install it: sudo apt-get install rustc-1.97 cargo-1.97 (or set GPU_TUNED_RUST_BIN)." >&2
     exit 1
 fi
 
