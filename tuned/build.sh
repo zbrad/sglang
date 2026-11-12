@@ -32,6 +32,18 @@ echo "Venv:      ${VENV_DIR}"
 echo "Python:    $(python3 --version)"
 echo ""
 
+# Rust, for dependencies with no cp314 wheel that pip builds from source (outlines==0.1.11 pins outlines_core==0.1.26,
+# which publishes wheels up to cp312 only). The distro's versioned toolchain (apt rustc-1.85 cargo-1.85; user decision
+# 2026-11-12) installs under /usr/lib/rust-1.85/bin; the unversioned rustc 1.75 is too old to rely on.
+GPU_TUNED_RUST_BIN="${GPU_TUNED_RUST_BIN:-/usr/lib/rust-1.85/bin}"
+if [[ -x "${GPU_TUNED_RUST_BIN}/cargo" ]]; then
+    export PATH="${GPU_TUNED_RUST_BIN}:${PATH}"
+    echo "Rust: $(rustc --version) from ${GPU_TUNED_RUST_BIN}"
+else
+    echo "ERROR: no cargo in ${GPU_TUNED_RUST_BIN}. Install it: sudo apt-get install rustc-1.85 cargo-1.85 (or set GPU_TUNED_RUST_BIN)." >&2
+    exit 1
+fi
+
 echo "Installing build-time requirements..."
 # sglang-kernel: scikit-build-core (pyproject build-system), a CMake newer than the host's, ninja.
 # sglang: setuptools (below) and setuptools-scm (its version comes from git).
