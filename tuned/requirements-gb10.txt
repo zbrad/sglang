@@ -1,0 +1,12 @@
+# GB10 (DGX Spark, aarch64, compute capability 12.1) tuned sglang: the dependencies that REPLACE upstream's
+# torch / flashinfer / sglang-kernel pins (tuned/repo.env GPU_TUNED_DROP_DEPS lists what is dropped, and why).
+# build.sh installs this file into the build venv; package.sh turns each line into a Requires-Dist of the
+# packaged sglang wheel. Option lines (-r, -c, --index-url) are not allowed: they cannot become Requires-Dist.
+#
+# torch: zbrad/pytorch fork wheel (no aarch64/sm_121 torch upstream). sglang upstream pins 2.14.1; the tuned
+# 2.15.0 is used instead (user decision 2026-11-12).
+torch @ https://github.com/zbrad/pytorch/releases/download/v2.15.0%2Bgb10.cu134.20261030.1/torch-2.15.0%2Bgb10.cu134.20261030.1-cp314-cp314-linux_aarch64.whl
+
+# flashinfer 0.7.4 (sglang's pin), zbrad/flashinfer tuned-builds: flashinfer-python, the flashinfer-jit-cache shim
+# and the flashinfer-jit-cache-sm121a provider, all at one +gb10 version, as in zbrad/vllm requirements/gb10.txt.
+# TODO(2026-11-12): fill in once the 0.7.4 gb10 release exists (built on zspark-3, not yet released).
