@@ -89,6 +89,14 @@ while IFS= read -r so; do
     KERNEL_SOS=$((KERNEL_SOS + 1))
 done < <(find "${UNPACKED}" -name '*.so')
 [[ "${KERNEL_SOS}" -gt 0 ]] || { echo "ERROR: no shared object with device code in ${KERNEL_WHEEL##*/}." >&2; exit 1; }
+# No shared object may depend on a stock torch library name: the tuned torch ships only -tuned names, so a stock NEEDED
+# entry would resolve to whatever stock copy the loader finds first (or nothing).
+STOCK_NEEDED_RE='^lib(c10|c10_cuda|torch|torch_cpu|torch_cuda|torch_cuda_linalg|torch_python|torch_global_deps|caffe2_nvrtc|shm)\.so(\.[0-9]+)*$'
+while IFS= read -r so; do
+    stock="$(readelf -d "${so}" | sed -n 's/.*(NEEDED).*\[\(.*\)\]/\1/p' | grep -E "${STOCK_NEEDED_RE}" || true)"
+    [[ -z "${stock}" ]] || { echo "ERROR: ${so#"${UNPACKED}"/} NEEDs stock torch libraries: $(echo ${stock})" >&2; exit 1; }
+done < <(find "${UNPACKED}" -name '*.so')
+echo "OK: no sglang-kernel shared object NEEDs a stock torch library name"
 [[ ! -d "${UNPACKED}/sgl_kernel/sm90" ]] || { echo "ERROR: ${KERNEL_WHEEL##*/} still ships sgl_kernel/sm90 (SGL_KERNEL_TUNED_ARCH not applied?)." >&2; exit 1; }
 echo "OK: ${KERNEL_SOS} sglang-kernel shared objects are sm_${GPU_TUNED_CUDA_ARCH} only"
 

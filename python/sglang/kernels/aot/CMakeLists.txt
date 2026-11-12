@@ -545,7 +545,12 @@ target_include_directories(infllm_ops PRIVATE
 )
 # The pybind module binds functions taking at::Generator, which pulls in
 # THPGeneratorClass from libtorch_python (not part of TORCH_LIBRARIES).
-# zbrad/sglang tuned-builds: also accept the zbrad/pytorch tuned name (libtorch_python-tuned.so); stock name first.
-find_library(TORCH_PYTHON_LIBRARY NAMES torch_python torch_python-tuned PATHS "${TORCH_INSTALL_PREFIX}/lib" REQUIRED)
+if (SGL_KERNEL_TUNED_ARCH)
+    # zbrad/sglang tuned-builds: only the zbrad/pytorch tuned name (libtorch_python-tuned.so), only in torch's own lib/
+    # (NO_DEFAULT_PATH): a stock libtorch_python found anywhere else must never be linked, so its absence fails here.
+    find_library(TORCH_PYTHON_LIBRARY NAMES torch_python-tuned PATHS "${TORCH_INSTALL_PREFIX}/lib" NO_DEFAULT_PATH REQUIRED)
+else()
+    find_library(TORCH_PYTHON_LIBRARY torch_python PATHS "${TORCH_INSTALL_PREFIX}/lib" REQUIRED)
+endif()
 target_link_libraries(infllm_ops PRIVATE ${TORCH_LIBRARIES} ${TORCH_PYTHON_LIBRARY} c10 cuda)
 install(TARGETS infllm_ops LIBRARY DESTINATION "sgl_kernel")
