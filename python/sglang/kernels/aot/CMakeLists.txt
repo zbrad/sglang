@@ -245,6 +245,21 @@ if ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.8" OR SGL_KERNEL_ENABLE_FP4)
     )
 endif()
 
+# zbrad/sglang tuned-builds: SGL_KERNEL_TUNED_ARCH=<arch> (e.g. 121a) builds for that one GPU only.
+# Every -gencode chosen above is dropped and a single code=sm_<arch> entry takes its place: SASS only,
+# no compute_<arch> PTX, so the driver never JIT-compiles these kernels. The same rule is applied to
+# INFLLM_FLASH_CUDA_FLAGS below; the sm90 fast-math copy of common_ops is not built (load_utils.py
+# loads it only on compute capability 9.0) and FA3 (sm90a only) is refused.
+set(SGL_KERNEL_TUNED_ARCH "" CACHE STRING "zbrad tuned-builds: the one native arch to build, SASS only (e.g. 121a)")
+if (SGL_KERNEL_TUNED_ARCH)
+    if (SGL_KERNEL_ENABLE_FA3)
+        message(FATAL_ERROR "SGL_KERNEL_TUNED_ARCH=${SGL_KERNEL_TUNED_ARCH}: FA3 is sm90a only; set SGL_KERNEL_ENABLE_FA3=OFF.")
+    endif()
+    list(FILTER SGL_KERNEL_CUDA_FLAGS EXCLUDE REGEX "^-gencode=")
+    list(APPEND SGL_KERNEL_CUDA_FLAGS "-gencode=arch=compute_${SGL_KERNEL_TUNED_ARCH},code=sm_${SGL_KERNEL_TUNED_ARCH}")
+    message(STATUS "SGL_KERNEL_TUNED_ARCH=${SGL_KERNEL_TUNED_ARCH}: single-arch SASS build")
+endif()
+
 # All source files
 # NOTE: Please sort the filenames alphabetically
 set(SOURCES
@@ -365,7 +380,12 @@ target_compile_definitions(common_ops_sm100_build PRIVATE
 # Install to different subdirectories
 # CMake will find the built libraries in their respective LIBRARY_OUTPUT_DIRECTORY locations
 # and install them to the specified destinations
-install(TARGETS common_ops_sm90_build LIBRARY DESTINATION sgl_kernel/sm90)
+if (SGL_KERNEL_TUNED_ARCH)
+    # zbrad/sglang tuned-builds: the sm90 copy is not built or shipped (see SGL_KERNEL_TUNED_ARCH above).
+    set_target_properties(common_ops_sm90_build PROPERTIES EXCLUDE_FROM_ALL TRUE)
+else()
+    install(TARGETS common_ops_sm90_build LIBRARY DESTINATION sgl_kernel/sm90)
+endif()
 install(TARGETS common_ops_sm100_build LIBRARY DESTINATION sgl_kernel/sm100)
 
 # ============================ Optional Install: FA3 ============================= #
@@ -499,6 +519,11 @@ endif()
 list(APPEND INFLLM_FLASH_CUDA_FLAGS "-gencode=arch=compute_90,code=sm_90")
 if ("${CUDA_VERSION}" VERSION_GREATER_EQUAL "12.8" OR SGL_KERNEL_ENABLE_SM100A)
     list(APPEND INFLLM_FLASH_CUDA_FLAGS "-gencode=arch=compute_120a,code=sm_120a")
+endif()
+if (SGL_KERNEL_TUNED_ARCH)
+    # zbrad/sglang tuned-builds: one native arch, SASS only (see SGL_KERNEL_TUNED_ARCH above).
+    list(FILTER INFLLM_FLASH_CUDA_FLAGS EXCLUDE REGEX "^-gencode=")
+    list(APPEND INFLLM_FLASH_CUDA_FLAGS "-gencode=arch=compute_${SGL_KERNEL_TUNED_ARCH},code=sm_${SGL_KERNEL_TUNED_ARCH}")
 endif()
 
 set(INFLLM_FLASH_SOURCES
