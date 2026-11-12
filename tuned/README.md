@@ -53,14 +53,14 @@ unset, the build is upstream's.
 ## Dependencies
 
 Upstream's `python/pyproject.toml` is not edited. `tuned/repo.env` lists what gb10 drops (`GPU_TUNED_DROP_DEPS`, with a
-reason for each), and `tuned/requirements-gb10.txt` what replaces it (tuned torch 2.15.0 and flashinfer 0.7.4 by URL).
+reason for each), and `tuned/requirements-gb10.txt` what replaces it (tuned torch 2.15.0, flashinfer 0.7.4 and torchvision 0.29.2 by URL).
 `build.sh` installs that file, guards the torch pin (`gpu_tuned_protect_torch_pin`), then installs upstream's remaining
 dependencies (`tuned/deps.py upstream`). `package.sh` rewrites the packaged wheels' `Requires-Dist` the same way
 (`tuned/deps.py rewrite`), adding `sglang-kernel @ <this release's URL>`. Dropped for gb10: `sgl-flash-mla` (no sm_12x
 kernels), `sgl-deep-gemm` (JIT-only), `sgl-deep-ep` (multi-GPU), `outlines` (optional grammar backend; its
 `outlines_core` has no cp314 wheel and its PyO3 0.22 refuses Python 3.14, so `--grammar-backend outlines` is not
-available; xgrammar and llguidance are), `timm` (vision models only; it pulls in torchvision), `torchvision`/`torchaudio` (no build for the tuned
-torch, so vision and audio models are out of scope).
+available; xgrammar and llguidance are), `torchaudio` (no build for the tuned torch, so audio models are out of
+scope). `torchvision` is replaced by the zbrad/vision tuned wheel (sglang imports it at start-up), built without image codecs.
 
 ## Where things are
 

@@ -72,10 +72,14 @@ for dropped in ${GPU_TUNED_DROP_DEPS}; do
     fi
 done
 echo "OK: none of the dropped dependencies is installed (${GPU_TUNED_DROP_DEPS})"
+# Fatal: the tuned torchvision must still be the one installed after upstream's dependencies (timm and others require
+# torchvision, and a stock one does not load against the tuned torch). Its stamp names the variant and package.
+TV_SO="$(python3 -c 'import os, importlib.util as u; print(os.path.join(os.path.dirname(u.find_spec("torchvision").origin), "_C_stable.so"))')"
+gpu_tuned_verify_build_info_json "${TV_SO}" "variant=${GPU_TUNED_VARIANT}" "package=torchvision" || { echo "ERROR: the installed torchvision is not the zbrad/vision ${GPU_TUNED_VARIANT} build (${TV_SO})." >&2; exit 1; }
 
 echo "Auditing already-installed tuned packages"
 # Non-fatal: surfaces a stock torch or flashinfer that replaced a tuned one before the build relies on it.
-gpu_tuned_audit_pinned pip "torch=${GPU_TUNED_VARIANT}" "flashinfer-python=${GPU_TUNED_VARIANT}"
+gpu_tuned_audit_pinned pip "torch=${GPU_TUNED_VARIANT}" "flashinfer-python=${GPU_TUNED_VARIANT}" "torchvision=${GPU_TUNED_VARIANT}"
 gpu_tuned_audit_stray pip flashinfer-cubin
 
 echo "Validating the tuned torch's build-info stamp"
