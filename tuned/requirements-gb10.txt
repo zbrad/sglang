@@ -9,4 +9,4 @@ torch @ https://github.com/zbrad/pytorch/releases/download/v2.15.0%2Bgb10.cu134.
 
 # flashinfer 0.7.4 (sglang's pin), zbrad/flashinfer tuned-builds: flashinfer-python, the flashinfer-jit-cache shim
 # and the flashinfer-jit-cache-sm121a provider, all at one +gb10 version, as in zbrad/vllm requirements/gb10.txt.
-# TODO(2026-11-12): fill in once the 0.7.4 gb10 release exists (built on zspark-3, not yet released).
+# TODO(2026-11-12): fill in once the 0.7.4 gb10 release exists (being built, not yet released).
