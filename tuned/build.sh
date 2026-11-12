@@ -64,6 +64,21 @@ gpu_tuned_install_setuptools || exit 1
 echo ""
 bash "${REPO_ROOT}/tuned/wheel.sh" "${GPU_TUNED_VARIANT}"
 
+# Seed sglang's runtime JIT cache from the acceptance models (the shipped wheel carries it; package.sh), then
+# prove it: the same models in strict mode, where any nvcc compile at run time is an error.
+echo ""
+echo "Seeding the sglang JIT cache (${SGLANG_JIT_CACHE_DIR}) from the acceptance models"
+rm -f "${GPU_TUNED_BUILD_ROOT}/jit-cache-seeded"
+rm -rf "${SGLANG_JIT_CACHE_DIR:?}"
+mkdir -p "${SGLANG_JIT_CACHE_DIR}"
+pip install --no-deps --force-reinstall "${GPU_TUNED_WHEEL_DIR}"/sglang_kernel-*.whl "${GPU_TUNED_WHEEL_DIR}"/sglang-*.whl
+export CUDA_VISIBLE_DEVICES="${GPU_TUNED_TEST_GPUS:-0}"
+(cd "${GPU_TUNED_BUILD_ROOT}" && python3 -I "${REPO_ROOT}/tuned/gb10_acceptance.py" seed) || { echo "ERROR: seeding the JIT cache failed." >&2; exit 1; }
+(cd "${GPU_TUNED_BUILD_ROOT}" && python3 -I "${REPO_ROOT}/tuned/gb10_acceptance.py" strict) || { echo "ERROR: the seeded JIT cache does not cover the acceptance models (strict mode)." >&2; exit 1; }
+SEEDED="$(find "${SGLANG_JIT_CACHE_DIR}" -name '*.so' | wc -l)"
+echo "OK: ${SEEDED} JIT modules seeded; strict mode passed"
+cat "${GPU_TUNED_BUILD_ROOT}/release-label" > "${GPU_TUNED_BUILD_ROOT}/jit-cache-seeded"
+
 echo ""
 echo "=========================================="
 echo "Build complete (${GPU_TUNED_HW_LABEL})."
