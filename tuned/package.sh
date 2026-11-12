@@ -103,7 +103,7 @@ while IFS= read -r so; do
         || { echo "ERROR: cuobjdump --list-ptx failed on ${so#"${STAGE}"/}: ${PTX_OUT}" >&2; exit 1; }
     [[ -z "$(printf '%s\n' "${PTX_OUT}" | grep -oE 'sm_[0-9]+[a-z]?' || true)" ]] \
         || { echo "ERROR: ${so#"${STAGE}"/} embeds PTX: the driver would JIT-compile it at run time." >&2; exit 1; }
-    gpu_tuned_stamp_lib_json "${so}" sglang-kernel "${RELEASE_TAG}" "" \
+    gpu_tuned_stamp_lib_json "${so}" sglang-kernel "${VERSION}" "" \
         "upstream.declared_version=${KERNEL_VERSION%%+*}" "fork.commit=${BUILD_COMMIT}" "fork.dirty:bool=false" \
         || { echo "ERROR: could not stamp ${so#"${STAGE}"/}." >&2; exit 1; }
     STAMPED=$((STAMPED + 1))
