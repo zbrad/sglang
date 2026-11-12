@@ -109,10 +109,16 @@ SGLANG_PUBLIC="${SGLANG_PUBLIC%%+*}"
 [[ -n "${SGLANG_PUBLIC}" && "${SGLANG_PUBLIC}" != 0.0.0* ]] || { echo "ERROR: setuptools-scm gave no usable version for python/ ('${SGLANG_PUBLIC}')." >&2; exit 1; }
 export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SGLANG="${SGLANG_PUBLIC}+${LOCAL_VERSION}"
 echo "Version: ${SETUPTOOLS_SCM_PRETEND_VERSION_FOR_SGLANG}"
-python3 -m build --wheel --no-isolation --skip-dependency-check --outdir "${GPU_TUNED_WHEEL_DIR}" python
+# --build-base keeps setuptools' build/ tree out of python/ (C6): left there, a later build packaged the earlier one's
+# build/lib/sglang into the wheel a second time (40 MB instead of 21 MB, found 2026-11-12).
+python3 -m build --wheel --no-isolation --skip-dependency-check --outdir "${GPU_TUNED_WHEEL_DIR}" \
+    --config-setting="--build-option=build --build-base=${GPU_TUNED_CMAKE_DIR}/sglang-py" python
+[[ ! -e python/build ]] || { echo "ERROR: the sglang build wrote python/build despite --build-base." >&2; exit 1; }
 
 SGLANG_WHEEL="$(ls "${GPU_TUNED_WHEEL_DIR}"/sglang-*.whl 2>/dev/null | head -1)"
 [[ -n "${SGLANG_WHEEL}" ]] || { echo "ERROR: no sglang wheel found in ${GPU_TUNED_WHEEL_DIR}" >&2; exit 1; }
+STRAY="$(python3 -c 'import sys, zipfile; print(sum(n.startswith("build/") for n in zipfile.ZipFile(sys.argv[1]).namelist()))' "${SGLANG_WHEEL}")"
+[[ "${STRAY}" -eq 0 ]] || { echo "ERROR: ${SGLANG_WHEEL##*/} contains ${STRAY} entries under build/ (a stale setuptools tree)." >&2; exit 1; }
 for w in "${KERNEL_WHEEL}" "${SGLANG_WHEEL}"; do
     case "${w##*/}" in sglang_kernel-*) pkg=sglang_kernel ;; *) pkg=sglang ;; esac
     v="$(gpu_tuned_wheel_version "${w}" "${pkg}")" || exit 1
