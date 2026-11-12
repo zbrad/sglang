@@ -1,0 +1,19 @@
+# sync-common report
+
+Written by sync-common.sh; commit it with the sync. One line per vendored file.
+
+when:   2026-11-12T11:14:52Z
+target: common.sh
+base:   unknown
+synced: 455e12c484ceef2d5cb33a7b71398c28bbbc732e
+result: all files resolved
+
+updated    tuned-common.sh  -- no merge base, so local edits could not be told apart; previous content saved as common.sh.local-455e12c
+added      constraints/rtx50-win.txt
+added      devices/gb10.conf
+added      devices/n1x-win.conf
+added      devices/rtx40.conf
+added      devices/rtx50-win.conf
+added      devices/rtx50.conf
+added      toolkits/cu133.env
+added      toolkits/cu134.env

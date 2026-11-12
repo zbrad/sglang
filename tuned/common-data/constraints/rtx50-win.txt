@@ -1,0 +1,17 @@
+# constraints/rtx50-win.txt -- Python package versions every rtx50-win consumer must build and run
+# with, as a pip/uv constraints file (`uv pip install -c <this file>`). Vendored like devices/ and
+# toolkits/ (tuned/common-data/constraints/). Only exact `name==version` pins, one reason each.
+#
+# Added 2026-11-12 at the user's say-so ("tuned-common constraints file, start with rtx50-win").
+# A pin belongs here only when two consumers must agree on it, because one builds a binary
+# against the package and another installs it at run time.
+
+# apache-tvm-ffi: zbrad/flashinfer's precompiled modules (jit-cache) link tvm_ffi.dll from the
+# build venv, and zbrad/vllm installs the runtime one (requirements/rtx50win.txt), so the two must
+# be the same version. 0.1.16 is the higher of the two versions in use when this was set
+# (flashinfer's build venv 0.1.16, vllm's pin 0.1.13.post3), at the user's say-so. Floor: xgrammar
+# 0.2.8's Windows wheel needs tvm_ffi.dll from 0.1.13 or later (WinError 127 on 0.1.11/0.1.12).
+# Checked at 0.1.16 on geo-a-node-rtx50-1, 2026-11-12: xgrammar 0.2.8 imports, and vllm
+# 0.33.1.dev179 with flashinfer 0.7.3 (FLASHINFER backend, XQA decode, FlashInfer sampler) runs
+# Qwen3-0.6B eager and compiled with CUDA graphs. No installed package caps it below 0.1.16.
+apache-tvm-ffi==0.1.16
