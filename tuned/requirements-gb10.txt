@@ -9,9 +9,9 @@ torch @ https://github.com/zbrad/pytorch/releases/download/v2.15.0%2Bgb10.cu134.
 
 # flashinfer 0.7.4 (sglang's pin), zbrad/flashinfer tuned-builds: flashinfer-python, the flashinfer-jit-cache shim
 # and the flashinfer-jit-cache-sm121a provider, all at one +gb10 version, as in zbrad/vllm requirements/gb10.txt.
-flashinfer-python @ https://github.com/zbrad/flashinfer/releases/download/v0.7.4%2Bgb10.cu134.20261112.0/flashinfer_python-0.7.4%2Bgb10.cu134.20261112.0-py3-none-any.whl
-flashinfer-jit-cache @ https://github.com/zbrad/flashinfer/releases/download/v0.7.4%2Bgb10.cu134.20261112.0/flashinfer_jit_cache-0.7.4%2Bgb10.cu134.20261112.0-py3-none-any.whl
-flashinfer-jit-cache-sm121a @ https://github.com/zbrad/flashinfer/releases/download/v0.7.4%2Bgb10.cu134.20261112.0/flashinfer_jit_cache_sm121a-0.7.4%2Bgb10.cu134.20261112.0-cp39-abi3-linux_aarch64.whl
+flashinfer-python @ https://github.com/zbrad/flashinfer/releases/download/v0.7.4%2Bgb10.cu134.20261113.1/flashinfer_python-0.7.4%2Bgb10.cu134.20261113.1-py3-none-any.whl
+flashinfer-jit-cache @ https://github.com/zbrad/flashinfer/releases/download/v0.7.4%2Bgb10.cu134.20261113.1/flashinfer_jit_cache-0.7.4%2Bgb10.cu134.20261113.1-py3-none-any.whl
+flashinfer-jit-cache-sm121a @ https://github.com/zbrad/flashinfer/releases/download/v0.7.4%2Bgb10.cu134.20261113.1/flashinfer_jit_cache_sm121a-0.7.4%2Bgb10.cu134.20261113.1-cp39-abi3-linux_aarch64.whl
 
 # torchvision: zbrad/vision tuned build of v0.29.2 (the stock wheel NEEDs libc10.so/libtorch*.so, which the tuned torch does
 # not ship, so its ops never register). Built without image codecs: torchvision.io decoders are unavailable.
