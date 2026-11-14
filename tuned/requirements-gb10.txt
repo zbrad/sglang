@@ -16,3 +16,6 @@ flashinfer-jit-cache-sm121a @ https://github.com/zbrad/flashinfer/releases/downl
 # torchvision: zbrad/vision tuned build of v0.29.2 (the stock wheel NEEDs libc10.so/libtorch*.so, which the tuned torch does
 # not ship, so its ops never register). Built without image codecs: torchvision.io decoders are unavailable.
 torchvision @ https://github.com/zbrad/vision/releases/download/v0.29.2%2Bgb10.cu134.20261112.0/torchvision-0.29.2%2Bgb10.cu134.20261112.0-py3-none-linux_aarch64.whl
+
+# pillow: upstream's pillow<13 is dropped (tuned/repo.env GPU_TUNED_DROP_DEPS): 12.x has advisories fixed in 13.0.0.
+pillow>=13
