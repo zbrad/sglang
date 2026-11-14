@@ -118,8 +118,17 @@ python3 -m wheel unpack "${SGLANG_BUILT}" --dest "${STAGE}/sglang"
 SUNPACKED="$(find "${STAGE}/sglang" -maxdepth 1 -mindepth 1 -type d)"
 SGLANG_REQ="${STAGE}/sglang-req.txt"
 { cat "${GPU_TUNED_REQUIREMENTS}"; echo "sglang-kernel @ ${RELEASE_URL}/${KERNEL_NAME}"; } > "${SGLANG_REQ}"
+# The audit copy names the kernel by version, not by its release URL (not published yet, so a 404): pip then takes it
+# from --find-links ${GPU_TUNED_DIST_DIR}. Every other requirement is the shipped wheel's.
+AUDIT_SRC="${STAGE}/sglang-audit"; AUDIT_REQ="${STAGE}/sglang-audit-req.txt"
+mkdir -p "${AUDIT_SRC}" "${STAGE}/audit-dist"
+cp -a "${SUNPACKED}" "${AUDIT_SRC}/"
+{ cat "${GPU_TUNED_REQUIREMENTS}"; echo "sglang-kernel==${KERNEL_VERSION}"; } > "${AUDIT_REQ}"
 # shellcheck disable=SC2086 # GPU_TUNED_DROP_DEPS is a word list
 python3 -I tuned/deps.py rewrite "$(ls -d "${SUNPACKED}"/*.dist-info)/METADATA" "${SGLANG_REQ}" ${GPU_TUNED_DROP_DEPS}
+# shellcheck disable=SC2086
+python3 -I tuned/deps.py rewrite "$(ls -d "${AUDIT_SRC}"/*/*.dist-info)/METADATA" "${AUDIT_REQ}" ${GPU_TUNED_DROP_DEPS}
+python3 -m wheel pack "$(find "${AUDIT_SRC}" -maxdepth 1 -mindepth 1 -type d)" --dest-dir "${STAGE}/audit-dist"
 CACHE_DEST="${SUNPACKED}/sglang/kernels/jit/_tuned_cache"
 [[ ! -e "${CACHE_DEST}" ]] || { echo "ERROR: ${SGLANG_NAME} already has sglang/kernels/jit/_tuned_cache." >&2; exit 1; }
 mkdir -p "${CACHE_DEST}"
@@ -142,8 +151,9 @@ done
 KERNEL_SHA="$(awk '{print $1}' "${GPU_TUNED_DIST_DIR}/${KERNEL_NAME}.sha256")"
 SGLANG_SHA="$(awk '{print $1}' "${GPU_TUNED_DIST_DIR}/${SGLANG_NAME}.sha256")"
 
-# Dependency audit of the packaged sglang wheel's resolved runtime deps (H9); the kernel wheel is found beside it.
-gpu_tuned_audit_deps "${GPU_TUNED_DIST_DIR}/${SGLANG_NAME}" "${GPU_TUNED_BUILD_ROOT}/dependency-audit.log" --find-links "${GPU_TUNED_DIST_DIR}" \
+# Dependency audit of the packaged sglang wheel's resolved runtime deps (H9), through the audit copy above; the kernel
+# wheel is found beside it.
+gpu_tuned_audit_deps "${STAGE}/audit-dist/${SGLANG_NAME}" "${GPU_TUNED_BUILD_ROOT}/dependency-audit.log" --find-links "${GPU_TUNED_DIST_DIR}" \
     || { echo "ERROR: dependency audit failed (see ${GPU_TUNED_BUILD_ROOT}/dependency-audit.log)." >&2; exit 1; }
 
 # H5: a DRAFT notes file if none is tracked yet; release.sh refuses it until a person has reviewed it.
