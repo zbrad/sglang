@@ -69,8 +69,10 @@ smoke() {
     meta="$(ls "${site}"/sglang-*.dist-info/METADATA 2>/dev/null | head -1)"
     if [[ -n "${meta}" ]] && grep -q '^Requires-Dist: torch @ https://github.com/zbrad/pytorch/' "${meta}" \
         && grep -q '^Requires-Dist: sglang-kernel @ https://github.com/zbrad/sglang/' "${meta}" \
-        && ! grep -qiE '^Requires-Dist: (sgl-flash-mla|sgl-deep-gemm|sgl-deep-ep|torchvision|torchaudio|torch==)' "${meta}"; then
-        ok "sglang METADATA: tuned torch and sglang-kernel by URL, dropped dependencies absent"
+        && grep -q '^Requires-Dist: torchvision @ https://github.com/zbrad/vision/' "${meta}" \
+        && ! grep -qiE '^Requires-Dist: (sgl-flash-mla|sgl-deep-gemm|sgl-deep-ep|torchaudio|torch==|pillow<)' "${meta}" \
+        && ! grep -qiE '^Requires-Dist: torchvision( *[=<>!~;]|$)' "${meta}"; then
+        ok "sglang METADATA: tuned torch, torchvision and sglang-kernel by URL, dropped dependencies absent"
     else
         fail "sglang METADATA does not carry the tuned dependency set (${meta:-no METADATA})"
     fi
