@@ -156,6 +156,36 @@ SGLANG_SHA="$(awk '{print $1}' "${GPU_TUNED_DIST_DIR}/${SGLANG_NAME}.sha256")"
 gpu_tuned_audit_deps "${STAGE}/audit-dist/${SGLANG_NAME}" "${GPU_TUNED_BUILD_ROOT}/dependency-audit.log" --find-links "${GPU_TUNED_DIST_DIR}" \
     || { echo "ERROR: dependency audit failed (see ${GPU_TUNED_BUILD_ROOT}/dependency-audit.log)." >&2; exit 1; }
 
+# Informational, never fails the build: osv-scanner over every tracked lock file, including the upstream Rust, Go and
+# test manifests the wheels do not ship (the ones GitHub's Dependabot reports on the default branch). The files are
+# named one by one: the root .gitignore's `*.mod` rule hides the tracked go.mod files from a directory scan. Set
+# OSV_SCANNER to the binary, or put osv-scanner on PATH; queries api.osv.dev.
+OSV_SCANNER="${OSV_SCANNER:-$(command -v osv-scanner || true)}"
+OSV_JSON="${GPU_TUNED_BUILD_ROOT}/osv-scan.json"; OSV_LOG="${GPU_TUNED_BUILD_ROOT}/osv-scan.log"
+if [[ -z "${OSV_SCANNER}" ]] || ! command -v jq >/dev/null; then
+    echo "NOTE: osv-scanner (set OSV_SCANNER) or jq not found; skipping the informational lock-file scan."
+else
+    OSV_ARGS=()
+    while IFS= read -r lock; do OSV_ARGS+=(-L "${lock}"); done < <(git ls-files -- '*Cargo.lock' '*go.mod' \
+        '*requirements*.txt' '*poetry.lock' '*uv.lock' '*Pipfile.lock' '*package-lock.json' '*pnpm-lock.yaml' '*yarn.lock')
+    osv_rc=0
+    "${OSV_SCANNER}" scan source "${OSV_ARGS[@]}" --format json > "${OSV_JSON}" 2> "${OSV_LOG}.err" || osv_rc=$?
+    if [[ ${osv_rc} -gt 1 ]]; then  # 0: none found, 1: vulnerabilities found, anything else: the scan itself failed
+        echo "NOTE: osv-scanner failed (rc ${osv_rc}, see ${OSV_LOG}.err); informational only, continuing."
+    else
+        {
+            echo "=== osv-scanner (informational): tracked lock files at $(git rev-parse --short HEAD) ==="
+            echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ); $("${OSV_SCANNER}" --version | head -1)"
+            jq -r --arg root "$(pwd)/" '.results[] | .source.path as $p | .packages[] | .package as $k
+                | ([.groups[]? | {key: .ids[], value: (.max_severity // "")}] | from_entries) as $sev
+                | .vulnerabilities[]? | [($p | ltrimstr($root)), $k.ecosystem, $k.name, $k.version, .id,
+                  ($sev[.id] // "")] | @tsv' "${OSV_JSON}" | sort -u
+            echo "RESULT: $(jq '[.results[].packages[].vulnerabilities[]?] | length' "${OSV_JSON}") vulnerability records"
+        } > "${OSV_LOG}"
+        echo "osv-scanner: $(tail -1 "${OSV_LOG}" | sed 's/^RESULT: //') in tracked lock files (informational; ${OSV_LOG})"
+    fi
+fi
+
 # H5: a DRAFT notes file if none is tracked yet; release.sh refuses it until a person has reviewed it.
 NOTES="tuned/releases/RELEASE_NOTES_${RELEASE_TAG#v}.md"
 if [[ ! -f "${NOTES}" ]]; then
