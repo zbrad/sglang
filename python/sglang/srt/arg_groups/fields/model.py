@@ -301,14 +301,10 @@ class Model(msgspec.Struct):
             nargs="*",
         ),
     ] = None
-    # Tuned (zbrad gb10) default: on. On GB10 the first host-to-GPU copy of a tensor that is still an untouched view
-    # of a mapped safetensors file runs at 3-5 MB/s (a 4B BF16 model took 19-25 min to load); reading each shard
-    # into memory first loads it in seconds. As a store_true flag it cannot be turned off on the command line; pass
-    # weight_loader_disable_mmap=False to sglang.Engine to keep mmap.
     weight_loader_disable_mmap: A[
         bool,
         "Disable mmap while loading weight using safetensors.",
-    ] = True
+    ] = False
     weight_loader_prefetch_checkpoints: A[
         bool,
         "Prefetch checkpoint files into OS page cache before loading. Each rank prefetches a fraction of the shards, reducing total network I/O on shared filesystems (NFS/Lustre) from N*checkpoint to 1*checkpoint. Recommended for models on network storage. When enabled, multi-threaded safetensors loading is disabled by default to avoid I/O oversubscription with the prefetch threads; set enable_multithread_load=true in --model-loader-extra-config to keep multi-threaded loading (e.g. on local NVMe where prefetch is a no-op).",
