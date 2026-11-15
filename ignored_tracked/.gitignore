@@ -1,0 +1,4 @@
+# Tracked files that an ignore rule elsewhere in this repo matches, moved here at <same relative path>
+# so no ignore rule hides a tracked file. Re-include everything below this directory.
+!*
+!*/
