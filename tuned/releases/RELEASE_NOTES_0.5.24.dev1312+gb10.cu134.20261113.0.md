@@ -1,3 +1,5 @@
+> **Superseded by [v0.5.24.dev1319+gb10.cu134.20261115.0](https://github.com/zbrad/sglang/releases/tag/v0.5.24.dev1319%2Bgb10.cu134.20261115.0)**, which fixes this release's known issue: model loads that took 19 min to over an hour in strict mode take seconds there (GB10 first-copy page faults on safetensors mmap views; upstream PR sgl-project/sglang#46670).
+
 # sglang 0.5.24.dev1312 — gb10 cu134 (0.5.24.dev1312+gb10.cu134.20261113.0)
 
 Single-GPU sglang for NVIDIA GB10 (DGX Spark, Blackwell, SM 12.1 accelerated), CUDA 13.4: sglang-kernel built for sm_121a only
