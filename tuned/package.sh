@@ -158,8 +158,9 @@ gpu_tuned_audit_deps "${STAGE}/audit-dist/${SGLANG_NAME}" "${GPU_TUNED_BUILD_ROO
 
 # Informational, never fails the build: osv-scanner over every tracked lock file, including the upstream Rust, Go and
 # test manifests the wheels do not ship (the ones GitHub's Dependabot reports on the default branch). The files are
-# named one by one: the root .gitignore's `*.mod` rule hides the tracked go.mod files from a directory scan. Set
-# OSV_SCANNER to the binary, or put osv-scanner on PATH; queries api.osv.dev.
+# named one by one from `git ls-files`, so an ignore rule can never hide a tracked one from the scan (the go.mod files
+# under ignored_tracked/ were hidden by `*.mod` before they moved). Set OSV_SCANNER to the binary, or put osv-scanner
+# on PATH; queries api.osv.dev.
 OSV_SCANNER="${OSV_SCANNER:-$(command -v osv-scanner || true)}"
 OSV_JSON="${GPU_TUNED_BUILD_ROOT}/osv-scan.json"; OSV_LOG="${GPU_TUNED_BUILD_ROOT}/osv-scan.log"
 if [[ -z "${OSV_SCANNER}" ]] || ! command -v jq >/dev/null; then
